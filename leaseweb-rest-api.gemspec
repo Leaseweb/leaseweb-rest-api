@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.license       = 'Apache'
   s.summary       = 'Leaseweb REST API client for Ruby'
   s.description   = 'Leaseweb REST API client for Ruby.'
-  s.homepage      = 'https://github.com/funzoneq/leaseweb-rest-api'
+  s.homepage      = 'https://github.com/LeaseWeb/leaseweb-rest-api'
 
   s.files         = `git ls-files`.split("\n")
 
