@@ -114,6 +114,10 @@ class LeasewebAPI
     self.class.put("/bareMetals/#{bareMetalId}/ips/#{ipAddress}", opt)
   end
 
+  def getIpmiCredentials(bareMetalId)
+    self.class.get("/bareMetals/#{bareMetalId}/ipmiCredentials", @options)
+  end
+
   def getNetworkUsage(bareMetalId)
     self.class.get("/bareMetals/#{bareMetalId}/networkUsage", @options)
   end
