@@ -9,13 +9,45 @@ require_relative 'hash-to-uri-conversion'
 class LeasewebAPI
   include HTTParty
   format :json
-  #debug_output $stderr
+  # debug_output $stderr
 
   base_uri 'https://api.leaseweb.com/v1'
 
-  def initialize(apikey, privateKey = nil, password = nil)
-    @options = { headers: { 'X-Lsw-Auth' => apikey } }
-    @private_key = OpenSSL::PKey::RSA.new(File.read(privateKey), password) unless private_key.nil? || password.nil?
+  def initialize(apikey = nil, privateKey = nil, password = nil, clientId = nil, clientSecret = nil)
+    @auth_token_url = 'https://auth.leaseweb.com/token'
+    if !apikey.nil?
+      @options = { headers: { 'X-Lsw-Auth' => apikey } }
+    elsif !clientId.nil? && !clientSecret.nil?
+      access_token = getOauthToken(clientId, clientSecret)['access_token']
+      @options = { headers: { 'Authorization' => "Bearer #{access_token}" } }
+    else
+      puts 'Your API credentials are required.'
+      exit
+    end
+    @private_key = OpenSSL::PKey::RSA.new(File.read(privateKey), password) unless privateKey.nil? || password.nil?
+  end
+
+  def getOauthToken(clientId, clientSecret)
+    auth = { username: clientId, password: clientSecret }
+    self.class.post(@auth_token_url, basic_auth: auth, body: { grant_type: 'client_credentials' })
+  end
+
+  def get(url)
+    self.class.get(url, @options)
+  end
+
+  def post(url, body)
+    opt = @options.merge!(body: body)
+    self.class.post(url, opt)
+  end
+
+  def put(url, body)
+    opt = @options.merge!(body: body)
+    self.class.put(url, opt)
+  end
+
+  def delete(url)
+    self.class.delete(url, @options)
   end
 
   # Domains
