@@ -1,6 +1,6 @@
 class HashToURIConversion
   def to_params(hash)
-    params = hash.map { |k,v| normalize_param(k,v) }.join
+    params = hash.map { |k, v| normalize_param(k, v) }.join
     params.chop! # trailing &
     params
   end
@@ -12,7 +12,7 @@ class HashToURIConversion
     if value.is_a?(Array)
       param << value.each_with_index.map { |element, i| normalize_param("#{key}[#{i}]", element) }.join
     elsif value.is_a?(Hash)
-      stack << [key,value]
+      stack << [key, value]
     else
       param << "#{key}=#{URI.encode(value.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))}&"
     end

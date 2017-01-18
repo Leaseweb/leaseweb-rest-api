@@ -3,6 +3,7 @@
 require 'httparty'
 require 'base64'
 require 'time'
+require 'json'
 require_relative 'hash-to-uri-conversion'
 
 class LeasewebAPI
@@ -12,14 +13,14 @@ class LeasewebAPI
 
   base_uri 'https://api.leaseweb.com/v1'
 
-  def initialize (apikey, privateKey, password)
-    @options = { headers: { "X-Lsw-Auth" => apikey } }
-    @private_key = OpenSSL::PKey::RSA.new(File.read(privateKey),password)
+  def initialize(apikey, privateKey = nil, password = nil)
+    @options = { headers: { 'X-Lsw-Auth' => apikey } }
+    @private_key = OpenSSL::PKey::RSA.new(File.read(privateKey), password) unless private_key.nil? || password.nil?
   end
 
   # Domains
   def getDomains
-    self.class.get("/domains", @options)
+    self.class.get('/domains', @options)
   end
 
   def getDomain(domain)
@@ -27,7 +28,7 @@ class LeasewebAPI
   end
 
   def updateDomain(domain, ttl)
-    opt = @options.merge!({ :body => { :ttl => ttl } })
+    opt = @options.merge!(body: { ttl: ttl })
 
     self.class.put("/domains/#{domain}", opt)
   end
@@ -37,9 +38,9 @@ class LeasewebAPI
   end
 
   def createDNSRecords(domain, host, content, type, priority = nil)
-    opt = @options.merge!({ :body => { :host => host, :content => content, :type => type } })
+    opt = @options.merge!(body: { host: host, content: content, type: type })
 
-    if not priority.nil? and (type == 'MX' or type == 'SRV')
+    if !priority.nil? && ((type == 'MX') || (type == 'SRV'))
       opt[:body][:priority] = priority
     end
 
@@ -51,9 +52,9 @@ class LeasewebAPI
   end
 
   def updateDNSRecord(domain, dnsRecordId, host, content, type, priority = nil)
-    opt = @options.merge!({ :body => { :id => dnsRecordId, :host => host, :content => content, :type => type } })
+    opt = @options.merge!(body: { id: dnsRecordId, host: host, content: content, type: type })
 
-    if not priority.nil? and (type == 'MX' or type == 'SRV')
+    if !priority.nil? && ((type == 'MX') || (type == 'SRV'))
       opt[:body][:priority] = priority
     end
 
@@ -66,12 +67,12 @@ class LeasewebAPI
 
   # Rescue
   def getRescueImages
-    self.class.get("/rescueImages", @options)
+    self.class.get('/rescueImages', @options)
   end
 
   # BareMetals
   def getBareMetals
-    self.class.get("/bareMetals", @options)
+    self.class.get('/bareMetals', @options)
   end
 
   def getBareMetal(bareMetalId)
@@ -79,7 +80,7 @@ class LeasewebAPI
   end
 
   def updateBareMetal(bareMetalId, reference)
-    opt = @options.merge!({ :body => { :reference => reference } })
+    opt = @options.merge!(body: { reference: reference })
 
     self.class.put("/bareMetals/#{bareMetalId}", opt)
   end
@@ -108,8 +109,8 @@ class LeasewebAPI
     self.class.get("/bareMetals/#{bareMetalId}/ips/#{ipAddress}", @options)
   end
 
-  def updateIP(bareMetalId, ipAddress, reverseLookup='', nullRouted=0)
-    opt = @options.merge!({ :body => { :reverseLookup => reverseLookup, :nullRouted => nullRouted } })
+  def updateIP(bareMetalId, ipAddress, reverseLookup = '', nullRouted = 0)
+    opt = @options.merge!(body: { reverseLookup: reverseLookup, nullRouted: nullRouted })
 
     self.class.put("/bareMetals/#{bareMetalId}/ips/#{ipAddress}", opt)
   end
@@ -122,11 +123,11 @@ class LeasewebAPI
     self.class.get("/bareMetals/#{bareMetalId}/networkUsage", @options)
   end
 
-  def getNetworkUsageBandWidth(bareMetalId, dateFrom, dateTo, format='json')
+  def getNetworkUsageBandWidth(bareMetalId, dateFrom, dateTo, format = 'json')
     self.class.get("/bareMetals/#{bareMetalId}/networkUsage/bandWidth", formatRequest(dateFrom, dateTo, format))
   end
 
-  def getNetworkUsageDataTraffic(bareMetalId, dateFrom, dateTo, format='json')
+  def getNetworkUsageDataTraffic(bareMetalId, dateFrom, dateTo, format = 'json')
     self.class.get("/bareMetals/#{bareMetalId}/networkUsage/dataTraffic", formatRequest(dateFrom, dateTo, format))
   end
 
@@ -135,19 +136,19 @@ class LeasewebAPI
   end
 
   def installServer(bareMetalId, osId, hdd = [])
-    opt = @options.merge!({ :body => { :osId => osId, :hdd => hdd }, query_string_normalizer: ->(h){ HashToURIConversion.new().to_params(h) } })
+    opt = @options.merge!(body: { osId: osId, hdd: hdd }, query_string_normalizer: ->(h) { HashToURIConversion.new.to_params(h) })
 
     self.class.post("/bareMetals/#{bareMetalId}/install", opt)
   end
 
   def postResqueMode(bareMetalId, osId)
-    opt = @options.merge!({ :body => { :osId => osId } })
+    opt = @options.merge!(body: { osId: osId })
 
     self.class.post("/bareMetals/#{bareMetalId}/rescueMode", opt)
   end
 
-  def getRootPassword(bareMetalId, format='json')
-    opt = @options.merge!({ :headers => self.formatHeader(format) })
+  def getRootPassword(bareMetalId, format = 'json')
+    opt = @options.merge!(headers: formatHeader(format))
 
     self.class.get("/bareMetals/#{bareMetalId}/rootPassword", opt)
   end
@@ -155,12 +156,12 @@ class LeasewebAPI
   def getInstallationStatus(bareMetalId)
     response = self.class.get("/bareMetals/#{bareMetalId}/installationStatus", @options)
 
-    if response["installationStatus"].include?('initRootPassword')
-      response["installationStatus"]["initRootPassword"] = self.decrypt(response["installationStatus"]["initRootPassword"])
+    if response['installationStatus'].include?('initRootPassword')
+      response['installationStatus']['initRootPassword'] = decrypt(response['installationStatus']['initRootPassword'])
     end
 
-    if response["installationStatus"].include?('rescueModeRootPass')
-      response["installationStatus"]["rescueModeRootPass"] = self.decrypt(response["installationStatus"]["rescueModeRootPass"])
+    if response['installationStatus'].include?('rescueModeRootPass')
+      response['installationStatus']['rescueModeRootPass'] = decrypt(response['installationStatus']['rescueModeRootPass'])
     end
 
     response
@@ -171,7 +172,7 @@ class LeasewebAPI
   end
 
   def setLease(bareMetalId, bootFileName)
-    opt = @options.merge!({ :body => { :bootFileName => bootFileName } })
+    opt = @options.merge!(body: { bootFileName: bootFileName })
 
     self.class.post("/bareMetals/#{bareMetalId}/leases", opt)
   end
@@ -184,16 +185,24 @@ class LeasewebAPI
     self.class.delete("/bareMetals/#{bareMetalId}/leases/#{macAddress}", @options)
   end
 
+  # New install call
+  def install(bareMetalId, operatingSystemId, options = {})
+    options[:operatingSystemId] = operatingSystemId
+    opt = @options.merge!(body: options.to_json)
+
+    self.class.post("/bmpapi/bareMetals/#{bareMetalId}/install", opt)
+  end
+
   # Private Networks
   def getPrivateNetworks
-    self.class.get("/privateNetworks", @options)
+    self.class.get('/privateNetworks', @options)
   end
 
   # TODO: check post with name
-  def createPrivateNetworks(name='')
-    opt = @options.merge!({ :body => { :name => name } })
+  def createPrivateNetworks(name = '')
+    opt = @options.merge!(body: { name: name })
 
-    self.class.post("/privateNetworks", opt)
+    self.class.post('/privateNetworks', opt)
   end
 
   def getPrivateNetwork(id)
@@ -201,8 +210,8 @@ class LeasewebAPI
   end
 
   # TODO: Check with Jeroen if it works
-  def updatePrivateNetwork(id, name='')
-    opt = @options.merge!({ :body => { :name => name } })
+  def updatePrivateNetwork(id, name = '')
+    opt = @options.merge!(body: { name: name })
 
     self.class.put("/privateNetworks/#{id}", opt)
   end
@@ -212,7 +221,7 @@ class LeasewebAPI
   end
 
   def createPrivateNetworksBareMetals(id, bareMetalId)
-    opt = @options.merge!({ :body => { :bareMetalId => bareMetalId } })
+    opt = @options.merge!(body: { bareMetalId: bareMetalId })
 
     self.class.post("/privateNetworks/#{id}/bareMetals", opt)
   end
@@ -223,7 +232,7 @@ class LeasewebAPI
 
   # Operating Systems
   def getOperatingSystems
-    self.class.get("/operatingSystems", @options)
+    self.class.get('/operatingSystems', @options)
   end
 
   def getOperatingSystem(operatingSystemId)
@@ -239,27 +248,55 @@ class LeasewebAPI
   end
 
   def getPartitionSchema(operatingSystemId, bareMetalId)
-    opt = @options.merge!({ :query => { :serverPackId => bareMetalId } })
+    opt = @options.merge!(query: { serverPackId: bareMetalId })
 
     self.class.get("/operatingSystems/#{operatingSystemId}/partitionSchema", opt)
   end
 
   # IPs
   def getIps
-    self.class.get("/ips", @options)
+    self.class.get('/ips', @options)
   end
 
   def getIp(ipAddress)
     self.class.get("/ips/#{ipAddress}", @options)
   end
 
-  def updateIp(ipAddress, reverseLookup='', nullRouted=0)
-    opt = @options.merge!({ :body => { :reverseLookup => reverseLookup, :nullRouted => nullRouted } })
+  def updateIp(ipAddress, reverseLookup = '', nullRouted = 0)
+    opt = @options.merge!(body: { reverseLookup: reverseLookup, nullRouted: nullRouted })
 
     self.class.put("/ips/#{ipAddress}", opt)
   end
 
+  # Pay as you go
+  def getPAYGInstances
+    self.class.get('/payAsYouGo/bareMetals/instances', @options)
+  end
+
+  def createPAYGInstance(modelId)
+    opt = @options.merge!(model: modelId)
+
+    self.class.post('/payAsYouGo/bareMetals/instances', opt)
+  end
+
+  def getPAYGInstance(bareMetalId)
+    self.class.get("/payAsYouGo/bareMetals/instances/#{bareMetalId}", @options)
+  end
+
+  def destroyPAYGInstance(bareMetalId)
+    self.class.post("/payAsYouGo/bareMetals/instances/#{bareMetalId}/destroy", @options)
+  end
+
+  def getPAYGModels
+    self.class.get('/payAsYouGo/bareMetals/models', @options)
+  end
+
+  def getPAYGModelInstance(modelId)
+    self.class.get("/payAsYouGo/bareMetals/models/#{modelId}", @options)
+  end
+
   protected
+
   def decrypt(string)
     @private_key.private_decrypt(Base64.decode64(string))
   end
@@ -269,16 +306,16 @@ class LeasewebAPI
   end
 
   def formatHeader(format)
-    if format == 'json'
-      header = { 'Accept' => 'application/json' }.merge!(@options[:headers])
-    else
-      header = { 'Accept' => 'image/png' }.merge!(@options[:headers])
-    end
+    header = if format == 'json'
+               { 'Accept' => 'application/json' }.merge!(@options[:headers])
+             else
+               { 'Accept' => 'image/png' }.merge!(@options[:headers])
+             end
 
     header
   end
 
   def formatRequest(dateFrom, dateTo, format)
-    @options.merge!({ :query => { :dateFrom => self.dateFormat(dateFrom), :dateTo => self.dateFormat(dateTo) }, :headers => self.formatHeader(format) })
+    @options.merge!(query: { dateFrom: dateFormat(dateFrom), dateTo: dateFormat(dateTo) }, headers: formatHeader(format))
   end
 end
