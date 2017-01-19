@@ -48,7 +48,7 @@ api = LeasewebAPI.new(api_key, privateKeyFile, password)
 
 All return values are the direct JSON responses from Leaseweb converted into a Hash.
 
-See: [documentation](http://developer.leaseweb.com/document/api-documentation/)
+See: [documentation](http://developer.leaseweb.com/docs/)
 
 ### Managing servers
 
