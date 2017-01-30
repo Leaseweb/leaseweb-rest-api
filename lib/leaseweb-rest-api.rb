@@ -18,7 +18,9 @@ class LeasewebAPI
   end
 
   def getOauthToken(clientId, clientSecret)
-    self.class.post('https://auth.leaseweb.com/token', basic_auth: { username: clientId, password: clientSecret }, body: { grant_type: 'client_credentials' })
+    response = self.class.post('https://auth.leaseweb.com/token', basic_auth: { username: clientId, password: clientSecret }, body: { grant_type: 'client_credentials' })
+    access_token = response.parsed_response['access_token']
+
     @options = { headers: { 'Authorization' => "Bearer #{access_token}" } }
   end
 
@@ -34,7 +36,7 @@ class LeasewebAPI
     data = []
 
     loop do
-      response = self.class.get(url + "&offset=#{offset}&limit=#{limit}", @options)
+      response = self.class.get("#{url}&offset=#{offset}&limit=#{limit}", @options)
       total = response.parsed_response['_metadata']['totalCount']
 
       data += response.parsed_response[key]
