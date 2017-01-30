@@ -58,7 +58,7 @@ privateKeyFile = './id_rsa'
 password = 'my_super_strong_s3cr3t_passw0rd'
 
 api = LeasewebAPI.new
-getOauthToken(client_id, client_secret)
+api.getOauthToken(client_id, client_secret)
 api.readPrivateKey(privateKeyFile, password)
 ```
 
