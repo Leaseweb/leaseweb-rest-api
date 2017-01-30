@@ -43,7 +43,23 @@ Start by creating a new instance of the `LeasewebAPI` class, and passing your ap
 api_key = 'e12b534e-3bf6-4208-89e6-e43798b3c30f'
 privateKeyFile = './id_rsa'
 password = 'my_super_strong_s3cr3t_passw0rd'
-api = LeasewebAPI.new(api_key, privateKeyFile, password)
+
+api = LeasewebAPI.new
+api.apiKeyAuth(api_key)
+api.readPrivateKey(privateKeyFile, password)
+```
+
+or via oAuth:
+
+```ruby
+client_id = 'sadasdasd.asdasdasd.com'
+client_secret = 'a844f7c131a7b63e4129cbcf88352034ef11c86481e0cb2ed3653c07345a113b'
+privateKeyFile = './id_rsa'
+password = 'my_super_strong_s3cr3t_passw0rd'
+
+api = LeasewebAPI.new
+getOauthToken(client_id, client_secret)
+api.readPrivateKey(privateKeyFile, password)
 ```
 
 All return values are the direct JSON responses from Leaseweb converted into a Hash.

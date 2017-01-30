@@ -13,27 +13,37 @@ class LeasewebAPI
 
   base_uri 'https://api.leaseweb.com/v1'
 
-  def initialize(apikey = nil, privateKey = nil, password = nil, clientId = nil, clientSecret = nil)
-    @auth_token_url = 'https://auth.leaseweb.com/token'
-    if !apikey.nil?
-      @options = { headers: { 'X-Lsw-Auth' => apikey } }
-    elsif !clientId.nil? && !clientSecret.nil?
-      access_token = getOauthToken(clientId, clientSecret)['access_token']
-      @options = { headers: { 'Authorization' => "Bearer #{access_token}" } }
-    else
-      puts 'Your API credentials are required.'
-      exit
-    end
-    @private_key = OpenSSL::PKey::RSA.new(File.read(privateKey), password) unless privateKey.nil? || password.nil?
+  def apiKeyAuth(apikey)
+    @options = { headers: { 'X-Lsw-Auth' => apikey } }
   end
 
   def getOauthToken(clientId, clientSecret)
-    auth = { username: clientId, password: clientSecret }
-    self.class.post(@auth_token_url, basic_auth: auth, body: { grant_type: 'client_credentials' })
+    self.class.post('https://auth.leaseweb.com/token', basic_auth: { username: clientId, password: clientSecret }, body: { grant_type: 'client_credentials' })
+    @options = { headers: { 'Authorization' => "Bearer #{access_token}" } }
+  end
+
+  def readPrivateKey(privateKey, password)
+    @private_key = OpenSSL::PKey::RSA.new(File.read(privateKey), password)
   end
 
   def get(url)
     self.class.get(url, @options)
+  end
+
+  def get_paginated(url, key, offset = 0, limit = 50)
+    data = []
+
+    loop do
+      response = self.class.get(url + "&offset=#{offset}&limit=#{limit}", @options)
+      total = response.parsed_response['_metadata']['totalCount']
+
+      data += response.parsed_response[key]
+
+      offset += limit
+      break unless offset < total
+    end
+
+    data
   end
 
   def post(url, body)
