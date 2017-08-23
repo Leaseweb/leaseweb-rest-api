@@ -24,6 +24,13 @@ class LeasewebAPI
     @options = { headers: { 'Authorization' => "Bearer #{access_token}" } }
   end
 
+  def getPasswordToken(username, password, client_id, client_secret)
+    response = self.class.post('https://auth.leaseweb.com/token', basic_auth: { username: client_id, password: client_secret }, body: { grant_type: 'password', username: username, password: password })
+    access_token = response.parsed_response['access_token']
+
+    @options = { headers: { 'Authorization' => "Bearer #{access_token}" } }
+  end
+
   def readPrivateKey(privateKey, password)
     @private_key = OpenSSL::PKey::RSA.new(File.read(privateKey), password)
   end
