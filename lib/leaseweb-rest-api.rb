@@ -14,21 +14,21 @@ class LeasewebAPI
   base_uri 'https://api.leaseweb.com'
 
   def apiKeyAuth(apikey)
-    @options = { headers: { 'X-Lsw-Auth' => apikey } }
+    @options = { headers: { 'X-Lsw-Auth' => apikey, 'Content-Type' => 'application/json' } }
   end
 
   def getOauthToken(clientId, clientSecret)
     response = self.class.post('https://auth.leaseweb.com/token', basic_auth: { username: clientId, password: clientSecret }, body: { grant_type: 'client_credentials' })
     access_token = response.parsed_response['access_token']
 
-    @options = { headers: { 'Authorization' => "Bearer #{access_token}" } }
+    @options = { headers: { 'Authorization' => "Bearer #{access_token}", 'Content-Type' => 'application/json' } }
   end
 
   def getPasswordToken(username, password, client_id, client_secret)
     response = self.class.post('https://auth.leaseweb.com/token', basic_auth: { username: client_id, password: client_secret }, body: { grant_type: 'password', username: username, password: password })
     access_token = response.parsed_response['access_token']
 
-    @options = { headers: { 'Authorization' => "Bearer #{access_token}" } }
+    @options = { headers: { 'Authorization' => "Bearer #{access_token}", 'Content-Type' => 'application/json' } }
   end
 
   def readPrivateKey(privateKey, password)
