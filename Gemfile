@@ -1,4 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'gemspec'
+gemspec
+
 gem 'rake'
+gem 'rake-rspec'
