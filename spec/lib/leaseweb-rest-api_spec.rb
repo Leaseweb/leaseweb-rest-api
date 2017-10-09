@@ -9,12 +9,12 @@ describe LeasewebAPI do
     { 'X-Lsw-Auth' => apikey }
   end
 
-  subject {
+  subject do
     api = LeasewebAPI.new
     api.apiKeyAuth(apikey)
     api.readPrivateKey(privateKey, password)
     api
-  }
+  end
 
   describe '#getDomains' do
     let(:response) { '{}' }
