@@ -3,13 +3,18 @@ require_relative '../../lib/leaseweb-rest-api'
 
 describe LeasewebAPI do
   let(:apikey) { 'e17b534d-3af6-4208-89e6-e43798b3c30f' }
-  let(:privateKey) { '/Users/a.vermeer/Documents/leaseweb-rest-api/id_rsa' }
+  let(:privateKey) { File.expand_path('./test/id_rsa') }
   let(:password) { 'cdcHRt+,zVuZWtV2a7PkixZTn' }
   let(:request_headers) do
     { 'X-Lsw-Auth' => apikey }
   end
 
-  subject { LeasewebAPI.new(apikey, privateKey, password) }
+  subject do
+    api = LeasewebAPI.new
+    api.apiKeyAuth(apikey)
+    api.readPrivateKey(privateKey, password)
+    api
+  end
 
   describe '#getDomains' do
     let(:response) { '{}' }
