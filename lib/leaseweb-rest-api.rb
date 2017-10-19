@@ -13,22 +13,57 @@ class LeasewebAPI
 
   base_uri 'https://api.leaseweb.com'
 
+  def initialize
+    @tmpdir = "/tmp/lsw-rest-api"
+    Dir.mkdir(@tmpdir) unless Dir.exist?(@tmpdir)
+  end
+
   def apiKeyAuth(apikey)
     @options = { headers: { 'X-Lsw-Auth' => apikey, 'Content-Type' => 'application/json' } }
   end
 
-  def getOauthToken(clientId, clientSecret)
-    response = self.class.post('https://auth.leaseweb.com/token', basic_auth: { username: clientId, password: clientSecret }, body: { grant_type: 'client_credentials' })
-    access_token = response.parsed_response['access_token']
+  def getOauthToken(client_id, client_secret)
+    access_token = validate_token(client_id)
+
+    if (access_token == false)
+      response = self.class.post('https://auth.leaseweb.com/token', basic_auth: { username: client_id, password: client_secret }, body: { grant_type: 'client_credentials' })
+      access_token = response.parsed_response['access_token']
+      cache_token(client_id, access_token, response.parsed_response['expires_in'])
+    end
 
     @options = { headers: { 'Authorization' => "Bearer #{access_token}", 'Content-Type' => 'application/json' } }
   end
 
   def getPasswordToken(username, password, client_id, client_secret)
-    response = self.class.post('https://auth.leaseweb.com/token', basic_auth: { username: client_id, password: client_secret }, body: { grant_type: 'password', username: username, password: password })
-    access_token = response.parsed_response['access_token']
+    access_token = validate_token(client_id)
+
+    if (access_token == false)
+      response = self.class.post('https://auth.leaseweb.com/token', basic_auth: { username: client_id, password: client_secret }, body: { grant_type: 'password', username: username, password: password })
+      access_token = response.parsed_response['access_token']
+      cache_token(client_id, access_token, response.parsed_response['expires_in'])
+    end
 
     @options = { headers: { 'Authorization' => "Bearer #{access_token}", 'Content-Type' => 'application/json' } }
+  end
+
+  def validate_token(client_id)
+    file = "#{@tmpdir}/#{client_id}.json"
+    content = JSON.parse(File.read(file))
+    expires_at = DateTime.parse(content['expires_at'])
+
+    if expires_at > DateTime.now
+      return content['access_token']
+    else
+      File.delete(file)
+    end
+
+    return false
+  end
+
+  def cache_token(client_id, access_token, expires_in)
+    file = "#{@tmpdir}/#{client_id}.json"
+    content = { access_token: access_token, expires_at: Time.now.getutc + expires_in }.to_json
+    File.write(file, content)
   end
 
   def readPrivateKey(privateKey, password)
