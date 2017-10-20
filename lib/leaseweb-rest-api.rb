@@ -47,14 +47,18 @@ class LeasewebAPI
   end
 
   def validate_token(client_id)
-    file = "#{@tmpdir}/#{client_id}.json"
-    content = JSON.parse(File.read(file))
-    expires_at = DateTime.parse(content['expires_at'])
+    begin
+      file = "#{@tmpdir}/#{client_id}.json"
+      content = JSON.parse(File.read(file))
+      expires_at = DateTime.parse(content['expires_at'])
 
-    if expires_at > DateTime.now
-      return content['access_token']
-    else
-      File.delete(file)
+      if expires_at > DateTime.now
+        return content['access_token']
+      else
+        File.delete(file)
+      end
+    rescue
+      return false
     end
 
     return false
