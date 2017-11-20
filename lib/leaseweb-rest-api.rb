@@ -237,6 +237,12 @@ class LeasewebAPI
     self.class.post("/v1/bareMetals/#{bareMetalId}/rescueMode", opt)
   end
 
+  def postV2RescueMode(serverId, rescueImageId, sshKey)
+    opt = @options.merge!(body: { rescueImageId: rescueImageId, sshKeys: sshKey })
+
+    self.class.post("/internal/bmpapi/v2/servers/#{serverId}/rescueMode", opt)
+  end
+
   def getRootPassword(bareMetalId, format = 'json')
     opt = @options.merge!(headers: formatHeader(format))
 
