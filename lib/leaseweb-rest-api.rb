@@ -242,6 +242,14 @@ class LeasewebAPI
 
     self.class.post("/internal/bmpapi/v2/servers/#{serverId}/rescueMode", opt)
   end
+  
+  def getV2DedicatedServerByIp(ip)
+    self.class.get("https://api.leaseweb.com/internal/dedicatedserverapi/v2/servers?ip=#{ip}", @options)
+  end
+
+  def getV2DedicatedServer(serverId)
+    self.class.get("internal/dedicatedserverapi/v2/servers/#{serverId}", @options)
+  end
 
   def getRootPassword(bareMetalId, format = 'json')
     opt = @options.merge!(headers: formatHeader(format))
