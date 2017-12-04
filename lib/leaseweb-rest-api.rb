@@ -95,12 +95,12 @@ class LeasewebAPI
   end
 
   def post(url, body)
-    opt = @options.merge!(body: body.to_json)
+    opt = @options.merge!(body: body)
     self.class.post(url, opt)
   end
 
   def put(url, body)
-    opt = @options.merge!(body: body.to_json)
+    opt = @options.merge!(body: body)
     self.class.put(url, opt)
   end
 
@@ -238,7 +238,7 @@ class LeasewebAPI
   end
 
   def postV2RescueMode(serverId, rescueImageId, sshKey)
-    opt = @options.merge!(body: { rescueImageId: rescueImageId, sshKeys: sshKey })
+    opt = @options.merge!(body: { rescueImageId: rescueImageId, sshKeys: sshKey }.to_json)
 
     self.class.post("/internal/bmpapi/v2/servers/#{serverId}/rescueMode", opt)
   end
