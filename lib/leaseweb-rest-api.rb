@@ -9,7 +9,7 @@ require_relative 'hash-to-uri-conversion'
 class LeasewebAPI
   include HTTParty
   format :json
-  debug_output $stdout
+  # debug_output $stderr
 
   base_uri 'https://api.leaseweb.com'
 
@@ -118,7 +118,7 @@ class LeasewebAPI
   end
 
   def updateDomain(domain, ttl)
-    opt = @options.merge!(body: { ttl: ttl })
+    opt = @options.merge!(body: { ttl: ttl }.to_json)
 
     self.class.put("/v1/domains/#{domain}", opt)
   end
@@ -128,7 +128,7 @@ class LeasewebAPI
   end
 
   def createDNSRecords(domain, host, content, type, priority = nil)
-    opt = @options.merge!(body: { host: host, content: content, type: type })
+    opt = @options.merge!(body: { host: host, content: content, type: type }.to_json)
 
     if !priority.nil? && ((type == 'MX') || (type == 'SRV'))
       opt[:body][:priority] = priority
@@ -142,7 +142,7 @@ class LeasewebAPI
   end
 
   def updateDNSRecord(domain, dnsRecordId, host, content, type, priority = nil)
-    opt = @options.merge!(body: { id: dnsRecordId, host: host, content: content, type: type })
+    opt = @options.merge!(body: { id: dnsRecordId, host: host, content: content, type: type }.to_json)
 
     if !priority.nil? && ((type == 'MX') || (type == 'SRV'))
       opt[:body][:priority] = priority
@@ -170,7 +170,7 @@ class LeasewebAPI
   end
 
   def updateBareMetal(bareMetalId, reference)
-    opt = @options.merge!(body: { reference: reference })
+    opt = @options.merge!(body: { reference: reference }.to_json)
 
     self.class.put("/v1/bareMetals/#{bareMetalId}", opt)
   end
@@ -200,7 +200,7 @@ class LeasewebAPI
   end
 
   def updateIP(bareMetalId, ipAddress, reverseLookup = '', nullRouted = 0)
-    opt = @options.merge!(body: { reverseLookup: reverseLookup, nullRouted: nullRouted })
+    opt = @options.merge!(body: { reverseLookup: reverseLookup, nullRouted: nullRouted }.to_json)
 
     self.class.put("/v1/bareMetals/#{bareMetalId}/ips/#{ipAddress}", opt)
   end
@@ -226,13 +226,13 @@ class LeasewebAPI
   end
 
   def installServer(bareMetalId, osId, hdd = [])
-    opt = @options.merge!(body: { osId: osId, hdd: hdd }, query_string_normalizer: ->(h) { HashToURIConversion.new.to_params(h) })
+    opt = @options.merge!(body: { osId: osId, hdd: hdd }.to_json, query_string_normalizer: ->(h) { HashToURIConversion.new.to_params(h) })
 
     self.class.post("/v1/bareMetals/#{bareMetalId}/install", opt)
   end
 
   def postResqueMode(bareMetalId, osId)
-    opt = @options.merge!(body: { osId: osId })
+    opt = @options.merge!(body: { osId: osId }.to_json)
 
     self.class.post("/v1/bareMetals/#{bareMetalId}/rescueMode", opt)
   end
@@ -276,7 +276,7 @@ class LeasewebAPI
   end
 
   def setLease(bareMetalId, bootFileName)
-    opt = @options.merge!(body: { bootFileName: bootFileName })
+    opt = @options.merge!(body: { bootFileName: bootFileName }.to_json)
 
     self.class.post("/v1/bareMetals/#{bareMetalId}/leases", opt)
   end
@@ -296,7 +296,7 @@ class LeasewebAPI
 
   # TODO: check post with name
   def createPrivateNetworks(name = '')
-    opt = @options.merge!(body: { name: name })
+    opt = @options.merge!(body: { name: name }.to_json)
 
     self.class.post('/v1/privateNetworks', opt)
   end
@@ -307,7 +307,7 @@ class LeasewebAPI
 
   # TODO: Check with Jeroen if it works
   def updatePrivateNetwork(id, name = '')
-    opt = @options.merge!(body: { name: name })
+    opt = @options.merge!(body: { name: name }.to_json)
 
     self.class.put("/v1/privateNetworks/#{id}", opt)
   end
@@ -317,7 +317,7 @@ class LeasewebAPI
   end
 
   def createPrivateNetworksBareMetals(id, bareMetalId)
-    opt = @options.merge!(body: { bareMetalId: bareMetalId })
+    opt = @options.merge!(body: { bareMetalId: bareMetalId }.to_json)
 
     self.class.post("/v1/privateNetworks/#{id}/bareMetals", opt)
   end
@@ -359,7 +359,7 @@ class LeasewebAPI
   end
 
   def updateIp(ipAddress, reverseLookup = '', nullRouted = 0)
-    opt = @options.merge!(body: { reverseLookup: reverseLookup, nullRouted: nullRouted })
+    opt = @options.merge!(body: { reverseLookup: reverseLookup, nullRouted: nullRouted }.to_json)
 
     self.class.put("/v1/ips/#{ipAddress}", opt)
   end
