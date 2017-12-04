@@ -9,7 +9,7 @@ require_relative 'hash-to-uri-conversion'
 class LeasewebAPI
   include HTTParty
   format :json
-  # debug_output $stderr
+  debug_output $stdout
 
   base_uri 'https://api.leaseweb.com'
 
@@ -242,7 +242,7 @@ class LeasewebAPI
 
     self.class.post("/internal/bmpapi/v2/servers/#{serverId}/rescueMode", opt)
   end
-  
+
   def getV2DedicatedServerByIp(ip)
     self.class.get("https://api.leaseweb.com/internal/dedicatedserverapi/v2/servers?ip=#{ip}", @options)
   end
