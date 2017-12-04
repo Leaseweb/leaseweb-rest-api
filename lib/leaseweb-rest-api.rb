@@ -95,12 +95,12 @@ class LeasewebAPI
   end
 
   def post(url, body)
-    opt = @options.merge!(body: body)
+    opt = @options.merge!(body: body.to_json)
     self.class.post(url, opt)
   end
 
   def put(url, body)
-    opt = @options.merge!(body: body)
+    opt = @options.merge!(body: body.to_json)
     self.class.put(url, opt)
   end
 
