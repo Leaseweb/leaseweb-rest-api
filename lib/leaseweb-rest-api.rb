@@ -71,7 +71,11 @@ class LeasewebAPI
   end
 
   def readPrivateKey(privateKey, password)
-    @private_key = OpenSSL::PKey::RSA.new(File.read(privateKey), password)
+    if password
+      @private_key = OpenSSL::PKey::RSA.new(File.read(privateKey), password)
+    else
+      @private_key = OpenSSL::PKey::RSA.new(File.read(privateKey))
+    end
   end
 
   def get(url)
