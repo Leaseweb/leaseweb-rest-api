@@ -229,6 +229,10 @@ class LeasewebAPI
     self.class.post("/v1/bareMetals/#{bareMetalId}/reboot", @options)
   end
 
+  def postV2Reboot(bareMetalId)
+    self.class.post("https://api.leaseweb.com/bareMetals/v2/servers/#{bareMetalId}/powerCycle", @options)
+  end
+
   def installServer(bareMetalId, osId, hdd = [])
     opt = @options.merge!(body: { osId: osId, hdd: hdd }.to_json, query_string_normalizer: ->(h) { HashToURIConversion.new.to_params(h) })
 
@@ -244,7 +248,7 @@ class LeasewebAPI
   def postV2RescueMode(serverId, rescueImageId, sshKey)
     opt = @options.merge!(body: { rescueImageId: rescueImageId, sshKeys: sshKey, powerCycle: true }.to_json)
 
-    self.class.post("/internal/bmpapi/v2/servers/#{serverId}/rescueMode", opt)
+    self.class.post("https://api.leaseweb.com/bareMetals/v2/servers/#{serverId}/rescueMode", opt)
   end
 
   def getV2DedicatedServers
