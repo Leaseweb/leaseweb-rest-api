@@ -233,6 +233,10 @@ class LeasewebAPI
     self.class.post("https://api.leaseweb.com/bareMetals/v2/servers/#{bareMetalId}/powerCycle", @options)
   end
 
+  def postV2PowerOn(bareMetalId)
+    self.class.post("https://api.leaseweb.com/bareMetals/v2/servers/#{bareMetalId}/powerOn", @options)
+  end
+
   def installServer(bareMetalId, osId, hdd = [])
     opt = @options.merge!(body: { osId: osId, hdd: hdd }.to_json, query_string_normalizer: ->(h) { HashToURIConversion.new.to_params(h) })
 
