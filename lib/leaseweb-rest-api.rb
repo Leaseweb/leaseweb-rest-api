@@ -110,8 +110,25 @@ class LeasewebAPI
     self.class.post("https://api.leaseweb.com/bareMetals/v2/servers/#{serverId}/rescueMode", opt)
   end
 
-  def getV2DedicatedServers
-    self.class.get("https://api.leaseweb.com/bareMetals/v2/servers?limit=100000", @options)
+  def getV2DedicatedServers(result = nil)
+    partialSize = (result && result['servers'] && result['servers'].size) || 0
+    partialResult = self.class.get("https://api.leaseweb.com/bareMetals/v2/servers?offset=#{partialSize}&limit=50", @options)
+
+    return partialResult if partialResult['errorMessage']
+
+    if result == nil
+      result = partialResult
+    else
+      result['servers'] += partialResult['servers']
+      result['_metadata']['offset'] == 0
+      result['_metadata']['limit'] = partialResult['_metadata']['totalCount']
+    end
+
+    if result['servers'].size < partialResult['_metadata']['totalCount']
+      return getV2DedicatedServers(result)
+    end
+
+    return result
   end
 
   def getV2DedicatedServerByIp(ip)
