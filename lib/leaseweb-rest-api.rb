@@ -105,6 +105,8 @@ class LeasewebAPI
   end
 
   def postV2RescueMode(serverId, rescueImageId, sshKey)
+    self.class.post("https://api.leaseweb.com/bareMetals/v2/servers/#{serverId}/cancelActiveJob", @options)
+
     opt = @options.merge!(body: { rescueImageId: rescueImageId, sshKeys: sshKey, powerCycle: true }.to_json)
 
     self.class.post("https://api.leaseweb.com/bareMetals/v2/servers/#{serverId}/rescueMode", opt)
