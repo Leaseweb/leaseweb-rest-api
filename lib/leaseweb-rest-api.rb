@@ -82,6 +82,22 @@ class LeasewebAPI
     self.class.get(url, @options)
   end
 
+  def get_paginated(url, key, offset = 0, limit = 50)
+    data = []
+
+    loop do
+      response = self.class.get("#{url}&offset=#{offset}&limit=#{limit}", @options)
+      total = response.parsed_response['_metadata']['totalCount']
+
+      data += response.parsed_response[key]
+
+      offset += limit
+      break unless offset < total
+    end
+
+    data
+  end
+
   def post(url, body)
     opt = @options.merge!(body: body)
     self.class.post(url, opt)
@@ -139,6 +155,191 @@ class LeasewebAPI
 
   def getV2DedicatedServer(serverId)
     self.class.get("https://api.leaseweb.com/bareMetals/v2/servers/#{serverId}", @options)
+  end
+
+  def postV2VirtualServerPowerOn(serverId)
+    self.class.post("https://api.leaseweb.com/cloud/v2/virtualServers/#{serverId}/powerOn", @options)
+  end
+
+  def postV2VirtualServerPowerOff(serverId)
+    self.class.post("https://api.leaseweb.com/cloud/v2/virtualServers/#{serverId}/powerOff", @options)
+  end
+
+  def postV2VirtualServerReboot(serverId)
+    self.class.post("https://api.leaseweb.com/cloud/v2/virtualServers/#{serverId}/reboot", @options)
+  end
+
+  def postV2VirtualServerReinstall(serverId)
+    self.class.post("https://api.leaseweb.com/cloud/v2/virtualServers/#{serverId}/reinstall", @options)
+  end
+
+  def getV2VirtualServers(result = nil)
+    partialSize = (result && result['servers'] && result['servers'].size) || 0
+    partialResult = self.class.get("https://api.leaseweb.com/cloud/v2/virtualServers?offset=#{partialSize}&limit=50", @options)
+
+    return partialResult if partialResult['errorMessage']
+
+    if result == nil
+      result = partialResult
+    else
+      result['virtualServers'] += partialResult['virtualServers']
+      result['_metadata']['offset'] == 0
+      result['_metadata']['limit'] = partialResult['_metadata']['totalCount']
+    end
+
+    if result['servers'].size < partialResult['_metadata']['totalCount']
+      return getV2VirtualServers(result)
+    end
+
+    return result
+  end
+
+  def getV2VirtualServer(serverId)
+    self.class.get("https://api.leaseweb.com/cloud/v2/virtualServers/#{serverId}", @options)
+  end
+
+  def getV2VirtualServerOsCredentialsForUser(serverId, username)
+    self.class.get("https://api.leaseweb.com/cloud/v2/virtualServers/#{serverId}/OPERATING_SYSTEM/#{username}")
+  end
+
+  def getRootPassword(bareMetalId, format = 'json')
+    opt = @options.merge!(headers: formatHeader(format))
+
+    self.class.get("/v1/bareMetals/#{bareMetalId}/rootPassword", opt)
+  end
+
+  def getInstallationStatus(bareMetalId)
+    response = self.class.get("/v1/bareMetals/#{bareMetalId}/installationStatus", @options)
+
+    if response['installationStatus'].include?('initRootPassword')
+      response['installationStatus']['initRootPassword'] = decrypt(response['installationStatus']['initRootPassword'])
+    end
+
+    if response['installationStatus'].include?('rescueModeRootPass')
+      response['installationStatus']['rescueModeRootPass'] = decrypt(response['installationStatus']['rescueModeRootPass'])
+    end
+
+    response
+  end
+
+  def getLeases(bareMetalId)
+    self.class.get("/v1/bareMetals/#{bareMetalId}/leases", @options)
+  end
+
+  def setLease(bareMetalId, bootFileName)
+    opt = @options.merge!(body: { bootFileName: bootFileName }.to_json)
+
+    self.class.post("/v1/bareMetals/#{bareMetalId}/leases", opt)
+  end
+
+  def getLease(bareMetalId, macAddress)
+    self.class.get("/v1/bareMetals/#{bareMetalId}/leases/#{macAddress}", @options)
+  end
+
+  def deleteLease(bareMetalId, macAddress)
+    self.class.delete("/v1/bareMetals/#{bareMetalId}/leases/#{macAddress}", @options)
+  end
+
+  # Private Networks
+  def getPrivateNetworks
+    self.class.get('/v1/privateNetworks', @options)
+  end
+
+  # TODO: check post with name
+  def createPrivateNetworks(name = '')
+    opt = @options.merge!(body: { name: name }.to_json)
+
+    self.class.post('/v1/privateNetworks', opt)
+  end
+
+  def getPrivateNetwork(id)
+    self.class.get("/v1/privateNetworks/#{id}", @options)
+  end
+
+  # TODO: Check with Jeroen if it works
+  def updatePrivateNetwork(id, name = '')
+    opt = @options.merge!(body: { name: name }.to_json)
+
+    self.class.put("/v1/privateNetworks/#{id}", opt)
+  end
+
+  def deletePrivateNetwork(id)
+    self.class.delete("/v1/privateNetworks/#{id}", @options)
+  end
+
+  def createPrivateNetworksBareMetals(id, bareMetalId)
+    opt = @options.merge!(body: { bareMetalId: bareMetalId }.to_json)
+
+    self.class.post("/v1/privateNetworks/#{id}/bareMetals", opt)
+  end
+
+  def deletePrivateNetworksBareMetals(id, bareMetalId)
+    self.class.delete("/v1/privateNetworks/#{id}/bareMetals/#{bareMetalId}", @options)
+  end
+
+  # Operating Systems
+  def getOperatingSystems
+    self.class.get('/v1/operatingSystems', @options)
+  end
+
+  def getOperatingSystem(operatingSystemId)
+    self.class.get("/v1/operatingSystems/#{operatingSystemId}", @options)
+  end
+
+  def getControlPanels(operatingSystemId)
+    self.class.get("/v1/operatingSystems/#{operatingSystemId}/controlPanels", @options)
+  end
+
+  def getControlPanel(operatingSystemId, controlPanelId)
+    self.class.get("/v1/operatingSystems/#{operatingSystemId}/controlPanels/#{controlPanelId}", @options)
+  end
+
+  def getPartitionSchema(operatingSystemId, bareMetalId)
+    opt = @options.merge!(query: { serverPackId: bareMetalId })
+
+    self.class.get("/v1/operatingSystems/#{operatingSystemId}/partitionSchema", opt)
+  end
+
+  # IPs
+  def getIps
+    self.class.get('/v1/ips', @options)
+  end
+
+  def getIp(ipAddress)
+    self.class.get("/v1/ips/#{ipAddress}", @options)
+  end
+
+  def updateIp(ipAddress, reverseLookup = '', nullRouted = 0)
+    opt = @options.merge!(body: { reverseLookup: reverseLookup, nullRouted: nullRouted }.to_json)
+
+    self.class.put("/v1/ips/#{ipAddress}", opt)
+  end
+
+  # Pay as you go
+  def getPAYGInstances
+    self.class.get('/v1/payAsYouGo/bareMetals/instances', @options)
+  end
+
+  def createPAYGInstance(modelId)
+    opt = @options.merge!(model: modelId)
+
+    self.class.post('/v1/payAsYouGo/bareMetals/instances', opt)
+  end
+
+  def getPAYGInstance(bareMetalId)
+    self.class.get("/v1/payAsYouGo/bareMetals/instances/#{bareMetalId}", @options)
+  end
+
+  def destroyPAYGInstance(bareMetalId)
+    self.class.post("/v1/payAsYouGo/bareMetals/instances/#{bareMetalId}/destroy", @options)
+  end
+
+  def getPAYGModels
+    self.class.get('/v1/payAsYouGo/bareMetals/models', @options)
+  end
+
+  def getPAYGModelInstance(modelId)
+    self.class.get("/v1/payAsYouGo/bareMetals/models/#{modelId}", @options)
   end
 
   protected
