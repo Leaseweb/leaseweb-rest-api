@@ -174,7 +174,7 @@ class LeasewebAPI
   end
 
   def getV2VirtualServers(result = nil)
-    partialSize = (result && result['servers'] && result['servers'].size) || 0
+    partialSize = (result && result['virtualServers'] && result['virtualServers'].size) || 0
     partialResult = self.class.get("https://api.leaseweb.com/cloud/v2/virtualServers?offset=#{partialSize}&limit=50", @options)
 
     return partialResult if partialResult['errorMessage']
@@ -187,7 +187,7 @@ class LeasewebAPI
       result['_metadata']['limit'] = partialResult['_metadata']['totalCount']
     end
 
-    if result['servers'].size < partialResult['_metadata']['totalCount']
+    if result['virtualServers'].size < partialResult['_metadata']['totalCount']
       return getV2VirtualServers(result)
     end
 
