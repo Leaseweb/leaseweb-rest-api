@@ -197,9 +197,21 @@ class LeasewebAPI
   def getV2VirtualServer(serverId)
     self.class.get("https://api.leaseweb.com/cloud/v2/virtualServers/#{serverId}", @options)
   end
+  
+  def getV2VirtualServerControlPanelCredentials(serverId)
+    self.class.get("https://api.leaseweb.com/cloud/v2/virtualServers/#{serverId}/credentials/CONTROL_PANEL")
+  end
+
+   def getV2VirtualServerControlPanelCredentialsForUser(serverId, username)
+    self.class.get("https://api.leaseweb.com/cloud/v2/virtualServers/#{serverId}/credentials/CONTROL_PANEL/#{username}")
+  end
+
+   def getV2VirtualServerOsCredentials(serverId)
+    self.class.get("https://api.leaseweb.com/cloud/v2/virtualServers/#{serverId}/credentials/OPERATING_SYSTEM")
+  end
 
   def getV2VirtualServerOsCredentialsForUser(serverId, username)
-    self.class.get("https://api.leaseweb.com/cloud/v2/virtualServers/#{serverId}/OPERATING_SYSTEM/#{username}")
+    self.class.get("https://api.leaseweb.com/cloud/v2/virtualServers/#{serverId}/credentials/OPERATING_SYSTEM/#{username}")
   end
 
   def getRootPassword(bareMetalId, format = 'json')
