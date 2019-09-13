@@ -82,22 +82,6 @@ class LeasewebAPI
     self.class.get(url, @options)
   end
 
-  def get_paginated(url, key, offset = 0, limit = 50)
-    data = []
-
-    loop do
-      response = self.class.get("#{url}&offset=#{offset}&limit=#{limit}", @options)
-      total = response.parsed_response['_metadata']['totalCount']
-
-      data += response.parsed_response[key]
-
-      offset += limit
-      break unless offset < total
-    end
-
-    data
-  end
-
   def post(url, body)
     opt = @options.merge!(body: body)
     self.class.post(url, opt)
