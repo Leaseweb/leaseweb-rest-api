@@ -337,6 +337,10 @@ class LeasewebAPI
   def getPAYGModelInstance(modelId)
     self.class.get("/v1/payAsYouGo/bareMetals/models/#{modelId}", @options)
   end
+  
+  def getBandWidthMetrics(bareMetalId, dateFrom, dateTo, format = 'json')
+    self.class.get("/bareMetals/v2/servers/#{bareMetalId}/metrics/bandwidth", formatRequestV2(dateFrom, dateTo, format))
+  end
 
   protected
 
@@ -360,5 +364,9 @@ class LeasewebAPI
 
   def formatRequest(dateFrom, dateTo, format)
     @options.merge!(query: { dateFrom: dateFormat(dateFrom), dateTo: dateFormat(dateTo) }, headers: formatHeader(format))
+  end
+  
+  def formatRequestV2(dateFrom, dateTo, format)
+    @options.merge!(query: { from: dateFormat(dateFrom), to: dateFormat(dateTo) }, headers: formatHeader(format))
   end
 end
