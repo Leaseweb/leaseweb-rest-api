@@ -339,13 +339,11 @@ class LeasewebAPI
   end
   
   def getBandwidthMetrics(bareMetalId, dateFrom, dateTo, format = 'json')
-    @options.merge!(query: { from: dateFormatV2(dateFrom), to: dateFormatV2(dateTo), aggregation: 'AVG', granularity: 'DAY' }, headers: formatHeader(format))
-    self.class.get("/bareMetals/v2/servers/#{bareMetalId}/metrics/bandwidth", @options)
+    self.class.get("/bareMetals/v2/servers/#{bareMetalId}/metrics/bandwidth", formatRequestV2(dateFrom, dateTo, 'AVG', format))
   end
   
   def getDatatrafficMetrics(bareMetalId, dateFrom, dateTo, format = 'json')
-    @options.merge!(query: { from: dateFormatV2(dateFrom), to: dateFormatV2(dateTo), aggregation: 'SUM', granularity: 'DAY' }, headers: formatHeader(format))
-    self.class.get("/bareMetals/v2/servers/#{bareMetalId}/metrics/datatraffic", @options)
+    self.class.get("/bareMetals/v2/servers/#{bareMetalId}/metrics/datatraffic", formatRequestV2(dateFrom, dateTo, 'SUM', format))
   end
 
   protected
@@ -374,5 +372,9 @@ class LeasewebAPI
 
   def formatRequest(dateFrom, dateTo, format)
     @options.merge!(query: { dateFrom: dateFormat(dateFrom), dateTo: dateFormat(dateTo) }, headers: formatHeader(format))
+  end
+
+  def formatRequestV2(dateFrom, dateTo, aggregation, format)
+    @options.merge!(query: { from: dateFormatV2(dateFrom), to: dateFormatV2(dateTo), aggregation: aggregation, granularity: 'DAY' }, headers: formatHeader(format))
   end
 end
