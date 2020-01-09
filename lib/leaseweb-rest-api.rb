@@ -339,7 +339,7 @@ class LeasewebAPI
   end
   
   def getBandWidthMetrics(bareMetalId, dateFrom, dateTo, format = 'json')
-    @options.merge!(query: { from: dateFormat(dateFrom), to: dateFormat(dateTo), aggregation: 'SUM', granularity: 'DAY' }, headers: formatHeader(format))
+    @options.merge!(query: { from: dateFormatV2(dateFrom), to: dateFormatV2(dateTo), aggregation: 'SUM', granularity: 'DAY' }, headers: formatHeader(format))
     self.class.get("/bareMetals/v2/servers/#{bareMetalId}/metrics/bandwidth", @options)
   end
 
@@ -351,6 +351,10 @@ class LeasewebAPI
 
   def dateFormat(date)
     Date.parse(date).strftime('%d-%m-%Y')
+  end
+  
+  def dateFormatV2(date)
+    Date.parse(date).strftime('%Y-%m-%dT00:00:00Z')
   end
 
   def formatHeader(format)
