@@ -337,6 +337,14 @@ class LeasewebAPI
   def getPAYGModelInstance(modelId)
     self.class.get("/v1/payAsYouGo/bareMetals/models/#{modelId}", @options)
   end
+  
+  def getBandwidthMetrics(bareMetalId, dateFrom, dateTo, format = 'json')
+    self.class.get("/bareMetals/v2/servers/#{bareMetalId}/metrics/bandwidth", formatRequestV2(dateFrom, dateTo, 'AVG', format))
+  end
+  
+  def getDatatrafficMetrics(bareMetalId, dateFrom, dateTo, format = 'json')
+    self.class.get("/bareMetals/v2/servers/#{bareMetalId}/metrics/datatraffic", formatRequestV2(dateFrom, dateTo, 'SUM', format))
+  end
 
   protected
 
@@ -346,6 +354,10 @@ class LeasewebAPI
 
   def dateFormat(date)
     Date.parse(date).strftime('%d-%m-%Y')
+  end
+  
+  def dateFormatV2(date)
+    Date.parse(date).strftime('%Y-%m-%dT00:00:00Z')
   end
 
   def formatHeader(format)
@@ -360,5 +372,9 @@ class LeasewebAPI
 
   def formatRequest(dateFrom, dateTo, format)
     @options.merge!(query: { dateFrom: dateFormat(dateFrom), dateTo: dateFormat(dateTo) }, headers: formatHeader(format))
+  end
+
+  def formatRequestV2(dateFrom, dateTo, aggregation, format)
+    @options.merge!(query: { from: dateFormatV2(dateFrom), to: dateFormatV2(dateTo), aggregation: aggregation, granularity: 'DAY' }, headers: formatHeader(format))
   end
 end
