@@ -141,6 +141,10 @@ class LeasewebAPI
     self.class.get("https://api.leaseweb.com/bareMetals/v2/servers/#{serverId}", @options)
   end
 
+  def getV2DedicatedServerHardware(serverId)
+    self.class.get("https://api.leaseweb.com/bareMetals/v2/servers/#{serverId}/hardwareInfo", @options)
+  end
+
   def postV2VirtualServerPowerOn(serverId)
     self.class.post("https://api.leaseweb.com/cloud/v2/virtualServers/#{serverId}/powerOn", @options)
   end
