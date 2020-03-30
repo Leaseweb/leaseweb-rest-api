@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require 'httparty'
 require 'base64'
@@ -13,7 +13,7 @@ class LeasewebAPI
   base_uri 'https://api.leaseweb.com'
 
   def initialize
-    @tmpdir = "/tmp/lsw-rest-api"
+    @tmpdir = '/tmp/lsw-rest-api'
     Dir.mkdir(@tmpdir) unless Dir.exist?(@tmpdir)
   end
 
@@ -29,7 +29,7 @@ class LeasewebAPI
   def getOauthToken(client_id, client_secret)
     access_token = validate_token(client_id)
 
-    if (access_token == false)
+    if access_token == false
       response = self.class.post('https://auth.leaseweb.com/token', basic_auth: { username: client_id, password: client_secret }, body: { grant_type: 'client_credentials' })
       access_token = response.parsed_response['access_token']
       cache_token(client_id, access_token, response.parsed_response['expires_in'])
@@ -76,110 +76,120 @@ class LeasewebAPI
     data
   end
 
-  def postV2Reboot(serverId)
-    self.class.post("/bareMetals/v2/servers/#{serverId}/powerCycle", @options)
+  def rebootDedicatedServer(server_id)
+    self.class.post("/bareMetals/v2/servers/#{server_id}/powerCycle", @options)
   end
 
-  def postV2PowerOn(serverId)
-    self.class.post("/bareMetals/v2/servers/#{serverId}/powerOn", @options)
+  def powerOnDedicatedServer(server_id)
+    self.class.post("/bareMetals/v2/servers/#{server_id}/powerOn", @options)
   end
 
-  def postV2RescueMode(serverId, rescueImageId, sshKey)
-    self.class.post("/bareMetals/v2/servers/#{serverId}/cancelActiveJob", @options)
+  def launchRescueModeDedicatedServer(server_id, rescue_image_id, ssh_key)
+    self.class.post("/bareMetals/v2/servers/#{server_id}/cancelActiveJob", @options)
 
-    opt = @options.merge!(body: { rescueImageId: rescueImageId, sshKeys: sshKey, powerCycle: true }.to_json)
+    opt = @options.merge!(body: { rescueImageId: rescue_image_id, sshKeys: ssh_key, powerCycle: true }.to_json)
 
-    self.class.post("/bareMetals/v2/servers/#{serverId}/rescueMode", opt)
+    self.class.post("/bareMetals/v2/servers/#{server_id}/rescueMode", opt)
   end
 
-  def getV2DedicatedServers(result = nil)
+  def getDedicatedServers(result = nil)
     partialSize = (result && result['servers'] && result['servers'].size) || 0
     partialResult = self.class.get("/bareMetals/v2/servers?offset=#{partialSize}&limit=50", @options)
 
     return partialResult if partialResult['errorMessage']
 
-    if result == nil
+    if result.nil?
       result = partialResult
     else
       result['servers'] += partialResult['servers']
-      result['_metadata']['offset'] == 0
+      result['_metadata']['offset'] = 0
       result['_metadata']['limit'] = partialResult['_metadata']['totalCount']
     end
 
-    if result['servers'].size < partialResult['_metadata']['totalCount']
-      return getV2DedicatedServers(result)
-    end
+    return getDedicatedServers(result) if result['servers'].size < partialResult['_metadata']['totalCount']
 
-    return result
+    result
   end
 
-  def getV2DedicatedServerByIp(ip)
+  def getDedicatedServerByIp(ip)
     self.class.get("/internal/dedicatedserverapi/v2/servers?ip=#{ip}", @options)
   end
 
-  def getV2DedicatedServer(serverId)
-    self.class.get("/bareMetals/v2/servers/#{serverId}", @options)
+  def getDedicatedServer(server_id)
+    self.class.get("/bareMetals/v2/servers/#{server_id}", @options)
   end
 
-  def getV2DedicatedServerHardware(serverId)
-    self.class.get("/bareMetals/v2/servers/#{serverId}/hardwareInfo", @options)
+  def getDedicatedServerHardware(server_id)
+    self.class.get("/bareMetals/v2/servers/#{server_id}/hardwareInfo", @options)
   end
 
-  def postV2VirtualServerPowerOn(serverId)
-    self.class.post("/cloud/v2/virtualServers/#{serverId}/powerOn", @options)
+  def getDedicatedServerDhcpReservation(server_id)
+    result = self.class.get("/bareMetals/v2/servers/#{server_id}/leases", @options)
+    result['leases'].pop
   end
 
-  def postV2VirtualServerPowerOff(serverId)
-    self.class.post("/cloud/v2/virtualServers/#{serverId}/powerOff", @options)
+  def createDedicatedServerDhcpReservation(server_id, boot_file_name)
+    opt = @options.merge!(body: { bootFileName: boot_file_name }.to_json)
+    self.class.post("/bareMetals/v2/servers/#{server_id}/leases", opt)
   end
 
-  def postV2VirtualServerReboot(serverId)
-    self.class.post("/cloud/v2/virtualServers/#{serverId}/reboot", @options)
+  def removeDedicatedServerDhcpReservation(server_id)
+    self.class.delete("/bareMetals/v2/servers/#{server_id}/leases", @options)
   end
 
-  def postV2VirtualServerReinstall(serverId)
-    self.class.post("/cloud/v2/virtualServers/#{serverId}/reinstall", @options)
+  def powerOnVirtualServer(server_id)
+    self.class.post("/cloud/v2/virtualServers/#{server_id}/powerOn", @options)
   end
 
-  def getV2VirtualServers(result = nil)
+  def powerOffVirtualServer(server_id)
+    self.class.post("/cloud/v2/virtualServers/#{server_id}/powerOff", @options)
+  end
+
+  def rebootVirtualServer(server_id)
+    self.class.post("/cloud/v2/virtualServers/#{server_id}/reboot", @options)
+  end
+
+  def reinstallVirtualServer(server_id)
+    self.class.post("/cloud/v2/virtualServers/#{server_id}/reinstall", @options)
+  end
+
+  def getVirtualServers(result = nil)
     partialSize = (result && result['virtualServers'] && result['virtualServers'].size) || 0
     partialResult = self.class.get("/cloud/v2/virtualServers?offset=#{partialSize}&limit=50", @options)
 
     return partialResult if partialResult['errorMessage']
 
-    if result == nil
+    if result.nil?
       result = partialResult
     else
       result['virtualServers'] += partialResult['virtualServers']
-      result['_metadata']['offset'] == 0
+      result['_metadata']['offset'] = 0
       result['_metadata']['limit'] = partialResult['_metadata']['totalCount']
     end
 
-    if result['virtualServers'].size < partialResult['_metadata']['totalCount']
-      return getV2VirtualServers(result)
-    end
+    return getVirtualServers(result) if result['virtualServers'].size < partialResult['_metadata']['totalCount']
 
-    return result
+    result
   end
 
-  def getV2VirtualServer(serverId)
-    self.class.get("/cloud/v2/virtualServers/#{serverId}", @options)
+  def getVirtualServer(server_id)
+    self.class.get("/cloud/v2/virtualServers/#{server_id}", @options)
   end
 
-  def getV2VirtualServerControlPanelCredentials(serverId)
-    self.class.get("/cloud/v2/virtualServers/#{serverId}/credentials/CONTROL_PANEL", @options)
+  def getVirtualServerControlPanelCredentials(server_id)
+    self.class.get("/cloud/v2/virtualServers/#{server_id}/credentials/CONTROL_PANEL", @options)
   end
 
-  def getV2VirtualServerControlPanelCredentialsForUser(serverId, username)
-    self.class.get("/cloud/v2/virtualServers/#{serverId}/credentials/CONTROL_PANEL/#{username}", @options)
+  def getVirtualServerControlPanelCredentialsForUser(server_id, username)
+    self.class.get("/cloud/v2/virtualServers/#{server_id}/credentials/CONTROL_PANEL/#{username}", @options)
   end
 
-  def getV2VirtualServerOsCredentials(serverId)
-    self.class.get("/cloud/v2/virtualServers/#{serverId}/credentials/OPERATING_SYSTEM", @options)
+  def getVirtualServerOsCredentials(server_id)
+    self.class.get("/cloud/v2/virtualServers/#{server_id}/credentials/OPERATING_SYSTEM", @options)
   end
 
-  def getV2VirtualServerOsCredentialsForUser(serverId, username)
-    self.class.get("/cloud/v2/virtualServers/#{serverId}/credentials/OPERATING_SYSTEM/#{username}", @options)
+  def getVirtualServerOsCredentialsForUser(server_id, username)
+    self.class.get("/cloud/v2/virtualServers/#{server_id}/credentials/OPERATING_SYSTEM/#{username}", @options)
   end
 
   # Private Networks
@@ -209,31 +219,31 @@ class LeasewebAPI
     self.class.delete("/bareMetals/v2/privateNetworks/#{id}", @options)
   end
 
-  def createPrivateNetworksServers(id, serverId)
-    opt = @options.merge!(body: { serverId: serverId }.to_json)
+  def addDedicatedServerToPrivateNetwork(id, server_id)
+    opt = @options.merge!(body: { serverId: server_id }.to_json)
 
     self.class.post("/bareMetals/v2/privateNetworks/#{id}/servers", opt)
   end
 
-  def deletePrivateNetworksServers(id, serverId)
-    self.class.delete("/bareMetals/v2/privateNetworks/#{id}/servers/#{serverId}", @options)
+  def removeDedicatedServerFromPrivateNetwork(id, server_id)
+    self.class.delete("/bareMetals/v2/privateNetworks/#{id}/servers/#{server_id}", @options)
   end
 
   # Operating Systems
   def getOperatingSystems
-    self.class.get('/v2/operatingSystems', @options)
+    self.class.get('/bareMetals/v2/operatingSystems', @options)
   end
 
-  def getOperatingSystem(operatingSystemId)
-    self.class.get("/v2/operatingSystems/#{operatingSystemId}", @options)
+  def getOperatingSystem(operating_system_id)
+    self.class.get("/bareMetals/v2/operatingSystems/#{operating_system_id}", @options)
   end
 
-  def getControlPanels(operatingSystemId)
-    self.class.get("/v2/operatingSystems/#{operatingSystemId}/controlPanels", @options)
+  def getControlPanels(operating_system_id)
+    self.class.get("/bareMetals/v2/operatingSystems/#{operating_system_id}/controlPanels", @options)
   end
 
-  def getControlPanel(operatingSystemId, controlPanelId)
-    self.class.get("/v2/operatingSystems/#{operatingSystemId}/controlPanels/#{controlPanelId}", @options)
+  def getControlPanel(operating_system_id, control_panel_id)
+    self.class.get("/bareMetals/v2/operatingSystems/#{operating_system_id}/controlPanels/#{control_panel_id}", @options)
   end
 
   # IPs
@@ -241,22 +251,22 @@ class LeasewebAPI
     self.class.get('/ipMgmt/v2/ips', @options)
   end
 
-  def getIp(ipAddress)
-    self.class.get("/ipMgmt/v2/ips/#{ipAddress}", @options)
+  def getIp(ip)
+    self.class.get("/ipMgmt/v2/ips/#{ip}", @options)
   end
 
-  def updateIp(ipAddress, reverseLookup = '', nullRouted = 0)
-    opt = @options.merge!(body: { reverseLookup: reverseLookup, nullRouted: nullRouted }.to_json)
+  def updateIp(ip, reverse_lookup = '', null_routed = 0)
+    opt = @options.merge!(body: { reverseLookup: reverse_lookup, nullRouted: null_routed }.to_json)
 
-    self.class.put("/ipMgmt/v2/ips/#{ipAddress}", opt)
+    self.class.put("/ipMgmt/v2/ips/#{ip}", opt)
   end
 
-  def getBandwidthMetrics(serverId, dateFrom, dateTo, format = 'json')
-    self.class.get("/bareMetals/v2/servers/#{serverId}/metrics/bandwidth", formatRequestV2(dateFrom, dateTo, 'AVG', format))
+  def getDedicatedServerBandwidthMetrics(server_id, date_from, date_to, format = 'json')
+    self.class.get("/bareMetals/v2/servers/#{server_id}/metrics/bandwidth", formatRequest(date_from, date_to, 'AVG', format))
   end
 
-  def getDatatrafficMetrics(serverId, dateFrom, dateTo, format = 'json')
-    self.class.get("/bareMetals/v2/servers/#{serverId}/metrics/datatraffic", formatRequestV2(dateFrom, dateTo, 'SUM', format))
+  def getDedicatedServerDatatrafficMetrics(server_id, date_from, date_to, format = 'json')
+    self.class.get("/bareMetals/v2/servers/#{server_id}/metrics/datatraffic", formatRequest(date_from, date_to, 'SUM', format))
   end
 
   protected
@@ -267,16 +277,14 @@ class LeasewebAPI
       content = JSON.parse(File.read(file))
       expires_at = DateTime.parse(content['expires_at'])
 
-      if expires_at > DateTime.now
-        return content['access_token']
-      else
-        File.delete(file)
-      end
+      return content['access_token'] if expires_at > DateTime.now
+
+      File.delete(file)
     rescue
       return false
     end
 
-    return false
+    false
   end
 
   def cache_token(client_id, access_token, expires_in)
@@ -285,7 +293,7 @@ class LeasewebAPI
     File.write(file, content)
   end
 
-  def dateFormatV2(date)
+  def dateFormat(date)
     Date.parse(date).strftime('%Y-%m-%dT00:00:00Z')
   end
 
@@ -298,7 +306,7 @@ class LeasewebAPI
     header
   end
 
-  def formatRequestV2(dateFrom, dateTo, aggregation, format)
-    @options.merge!(query: { from: dateFormatV2(dateFrom), to: dateFormatV2(dateTo), aggregation: aggregation, granularity: 'DAY' }, headers: formatHeader(format))
+  def formatRequest(date_from, date_to, aggregation, format)
+    @options.merge!(query: { from: dateFormat(date_from), to: dateFormat(date_to), aggregation: aggregation, granularity: 'DAY' }, headers: formatHeader(format))
   end
 end
