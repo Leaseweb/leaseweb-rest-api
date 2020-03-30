@@ -9,3 +9,6 @@ Style/VariableName:
 
 Metrics/LineLength:
   Max: 300
+
+Metrics/MethodLength:
+  Max: 20

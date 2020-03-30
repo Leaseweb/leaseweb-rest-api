@@ -1,9 +1,11 @@
 leaseweb-rest-api
-=====================
+=================
 
 Rubygem to talk to Leaseweb's API
 
-## Installation
+
+Installation
+------------
 
 Add this line to your application's Gemfile:
 
@@ -23,30 +25,18 @@ Or install it yourself:
 $ gem install leaseweb-rest-api
 ```
 
-## Generating a public/private keypair
 
-Make sure you add a strong password to your SSH key!
+Usage
+-----
 
-```
-ssh-keygen -t rsa -b 4096 -C "test@example.com" -f id_rsa
-openssl rsa -in  id_rsa -pubout > id_rsa.pub.pem
-rm id_rsa.pub
-```
-
-Copy the content of id_rsa.pub.pem to the 'Public RSA Key'-field your [SSC API page](https://secure.leaseweb.nl/en/sscApi). Click 'Show API key' for your API key. Keep your id_rsa file private.
-
-## Usage
-
-Start by creating a new instance of the `LeasewebAPI` class, and passing your api key, private key and private key password.
+Start by creating a new instance of the `LeasewebAPI` class, and passing your
+api key, private key and private key password.
 
 ```ruby
-api_key = 'e12b534e-3bf6-4208-89e6-e43798b3c30f'
-privateKeyFile = './id_rsa'
-password = 'my_super_strong_s3cr3t_passw0rd'
+api_key = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
 
 api = LeasewebAPI.new
 api.apiKeyAuth(api_key)
-api.readPrivateKey(privateKeyFile, password)
 ```
 
 or via oAuth:
@@ -54,19 +44,19 @@ or via oAuth:
 ```ruby
 client_id = 'sadasdasd.asdasdasd.com'
 client_secret = 'a844f7c131a7b63e4129cbcf88352034ef11c86481e0cb2ed3653c07345a113b'
-privateKeyFile = './id_rsa'
-password = 'my_super_strong_s3cr3t_passw0rd'
 
 api = LeasewebAPI.new
 api.getOauthToken(client_id, client_secret)
-api.readPrivateKey(privateKeyFile, password)
 ```
 
-All return values are the direct JSON responses from Leaseweb converted into a Hash.
+All return values are the direct JSON responses from Leaseweb converted into a
+Hash.
 
 See: [documentation](http://developer.leaseweb.com/docs/)
 
-### Managing servers
+
+Managing servers
+----------------
 
 List my baremetal servers:
 
@@ -118,7 +108,9 @@ List all my domains:
 puts api.getDomains
 ```
 
-## Contribute
+
+Contribute
+----------
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)

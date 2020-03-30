@@ -1,8 +1,8 @@
 Gem::Specification.new do |s|
   s.name          = 'leaseweb-rest-api'
-  s.version       = '1.1.6'
-  s.authors       = 'Arnoud Vermeer'
-  s.email         = 'a.vermeer@tech.leaseweb.com'
+  s.version       = '2.0.0'
+  s.authors       = 'Leaseweb Product Owners'
+  s.email         = 'productowners@leaseweb.com'
   s.license       = 'Apache'
   s.summary       = 'Leaseweb REST API client for Ruby'
   s.description   = 'Leaseweb REST API client for Ruby.'
