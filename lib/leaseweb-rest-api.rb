@@ -65,7 +65,7 @@ class LeasewebAPI
     data = []
 
     loop do
-      response = self.class.get("#{url}&offset=#{offset}&limit=#{limit}")
+      response = self.class.get("#{url}&offset=#{offset}&limit=#{limit}", @options)
       total = response.parsed_response['_metadata']['totalCount']
       data += response.parsed_response[key]
       offset += limit
